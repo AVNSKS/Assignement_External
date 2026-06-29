@@ -274,6 +274,7 @@ const requestHandler = (request, response) => {
     return
   }
 
+  console.log(`[REQUEST] Method: ${request.method}, URL: ${request.url}`)
   const requestUrl = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`)
 
   if (request.method === 'GET' && requestUrl.pathname === '/health') {
