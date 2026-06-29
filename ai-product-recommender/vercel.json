@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "REPLACE_WITH_YOUR_BACKEND_VERCEL_URL/api/:path*"
+      "destination": "https://assignement-external-eueo.vercel.app/api/:path*"
     }
   ]
 }
