@@ -263,7 +263,7 @@ function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload))
 }
 
-const server = http.createServer((request, response) => {
+const requestHandler = (request, response) => {
   if (request.method === 'OPTIONS') {
     response.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
@@ -274,19 +274,19 @@ const server = http.createServer((request, response) => {
     return
   }
 
-  const requestUrl = new URL(request.url || '/', `http://${request.headers.host}`)
+  const requestUrl = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`)
 
   if (request.method === 'GET' && requestUrl.pathname === '/health') {
     sendJson(response, 200, { ok: true })
     return
   }
 
-  if (request.method === 'GET' && requestUrl.pathname === '/api/products') {
+  if (request.method === 'GET' && (requestUrl.pathname === '/api/products' || requestUrl.pathname === '/products')) {
     sendJson(response, 200, { products: catalogProducts })
     return
   }
 
-  if (request.method === 'POST' && requestUrl.pathname === '/api/recommendations') {
+  if (request.method === 'POST' && (requestUrl.pathname === '/api/recommendations' || requestUrl.pathname === '/recommendations')) {
     let requestBody = ''
 
     request.on('data', (chunk) => {
@@ -307,7 +307,8 @@ const server = http.createServer((request, response) => {
 
         const recommendation = await getRecommendations(preference)
         sendJson(response, 200, recommendation)
-      } catch {
+      } catch (err) {
+        console.error('Recommendations error:', err)
         sendJson(response, 500, {
           error: 'Unable to generate recommendations.',
         })
@@ -318,8 +319,14 @@ const server = http.createServer((request, response) => {
   }
 
   sendJson(response, 404, { error: 'Not found' })
-})
+}
 
-server.listen(port, () => {
-  console.log(`Backend server running on http://localhost:${port}`)
-})
+const server = http.createServer(requestHandler)
+
+if (!process.env.VERCEL) {
+  server.listen(port, () => {
+    console.log(`Backend server running on http://localhost:${port}`)
+  })
+}
+
+export default requestHandler
